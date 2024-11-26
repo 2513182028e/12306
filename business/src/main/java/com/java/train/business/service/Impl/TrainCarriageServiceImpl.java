@@ -124,7 +124,7 @@ public class TrainCarriageServiceImpl extends ServiceImpl<TrainCarriageMapper, T
 
         QueryWrapper<TrainCarriage> queryWrapper=new QueryWrapper<>();
         queryWrapper.eq("train_code",trainCode)
-                .orderByAsc("index");
+                .orderByAsc("indexes");
         return trainCarriageMapper.selectList(queryWrapper);
 
     }

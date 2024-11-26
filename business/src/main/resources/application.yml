@@ -1,0 +1,44 @@
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+canal:
+  server: 192.168.43.137:11111
+  destination: example
+spring:
+#  cache:
+#    type: redis
+#    redis:
+#      use-key-prefix: true
+#      key-prefix: train_cache_
+#      cache-null-values: false
+#      time-to-live: 60s
+  data:
+    redis:
+      port: 6379
+      database: 0
+      connect-timeout: 18000
+      lettuce:
+        pool:
+          max-active: -1
+          max-wait: -1
+          max-idle: 8
+          min-idle: 0
+      host: 192.168.43.137
+      timeout: 5000ms
+  kafka:
+    bootstrap-servers: 192.168.43.137:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: -1
+    consumer:
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      group-id: my-consumer-group
+    listener:
+      ack-mode: manual_immediate
+logging:
+  level:
+    sql: debug

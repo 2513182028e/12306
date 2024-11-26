@@ -97,7 +97,7 @@ public class DailyTrainSeatServiceImpl extends ServiceImpl<DailyTrainSeatMapper,
 
         //查找该列火车进过的站点数
         int len = trainStationService.countByTrainCode(trainCode);
-        String cell= StrUtil.fillBefore("",'0',len-1);
+        String sell= StrUtil.fillBefore("",'0',len-1);
         List<TrainSeat> trainSeats = trainSeatService.selectByTrainCode(trainCode);
         if(CollUtil.isEmpty(trainSeats))
         {
@@ -109,9 +109,10 @@ public class DailyTrainSeatServiceImpl extends ServiceImpl<DailyTrainSeatMapper,
             DateTime now = new DateTime();
             DailyTrainSeat dailyTrainSeat = BeanUtil.copyProperties(trainSeat, DailyTrainSeat.class);
             dailyTrainSeat.setId(ShowUtil.getSnowflakeNextId());
+            dailyTrainSeat.setSell(sell);
             dailyTrainSeat.setUpdateTime(now);
             dailyTrainSeat.setCreateTime(now);
-            dailyTrainSeat.setDate(now);
+            dailyTrainSeat.setDate(date);
             DailyTrainSeatmapper.insert(dailyTrainSeat);
         }
         LOG.info("生成日期【{}】车次【{}】的座位信息结束", DateUtil.formatDate(date), trainCode);
@@ -130,6 +131,7 @@ public class DailyTrainSeatServiceImpl extends ServiceImpl<DailyTrainSeatMapper,
         return (int)aLong;
     }
 
+
     public  List<DailyTrainSeat> selectByCarriage(Date date, String trainCode, Integer carriageIndex)
     {
         QueryWrapper<DailyTrainSeat> queryWrapper=new QueryWrapper<>();
@@ -139,4 +141,6 @@ public class DailyTrainSeatServiceImpl extends ServiceImpl<DailyTrainSeatMapper,
                 .orderByAsc("carriage_seat_index");
         return DailyTrainSeatmapper.selectList(queryWrapper);
     }
+
+
 }

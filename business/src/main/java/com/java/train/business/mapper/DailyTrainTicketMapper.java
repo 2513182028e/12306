@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.Date;
 
 @Mapper
-@CacheNamespace
+
 public interface DailyTrainTicketMapper extends BaseMapper<DailyTrainTicket>   {
 
     void updateCountBySell(Date date

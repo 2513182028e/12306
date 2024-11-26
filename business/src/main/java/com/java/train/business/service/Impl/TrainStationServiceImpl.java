@@ -118,11 +118,12 @@ public class TrainStationServiceImpl extends ServiceImpl<TrainStationMapper,Trai
 //        TrainStationExample trainStationExample = new TrainStationExample();
 //        trainStationExample.setOrderByClause("`index` asc");
 //        trainStationExample.createCriteria().andTrainCodeEqualTo(trainCode);
-
+        //LOG.info("trainCode的数值为:{}",trainCode);
         QueryWrapper<TrainStation> queryWrapper=new QueryWrapper<>();
         queryWrapper.eq("train_code",trainCode)
-                .orderByAsc("index");
-        return  trainStationMapper.selectList(queryWrapper);
+                .orderByAsc("indexes");
+
+        return trainStationMapper.selectList(queryWrapper);
 
     }
 

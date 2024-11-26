@@ -101,6 +101,7 @@ public class DailyTrainCarriageServiceImpl extends ServiceImpl<DailyTrainCarriag
             LOG.info("该车次没有车厢基础数据，生成该车次的车厢信息结束");
             return;
         }
+        LOG.info("车厢信息：{}",trainCarriages);
         //给每日数据进行赋值
         for (TrainCarriage trainCarriage:
                 trainCarriages) {
@@ -109,7 +110,8 @@ public class DailyTrainCarriageServiceImpl extends ServiceImpl<DailyTrainCarriag
             dailyTrainCarriage.setId(ShowUtil.getSnowflakeNextId());
             dailyTrainCarriage.setCreateTime(now);
             dailyTrainCarriage.setUpdateTime(now);
-            dailyTrainCarriage.setDate(now);
+            dailyTrainCarriage.setDate(date);
+            DailyTrainCarriagemapper.insert(dailyTrainCarriage);
         }
         LOG.info("生成日期【{}】车次【{}】的车厢信息结束", DateUtil.formatDate(date), code);
 

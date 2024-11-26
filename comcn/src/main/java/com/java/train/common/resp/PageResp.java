@@ -15,4 +15,12 @@ public class PageResp<T> implements Serializable {
     private List<T> lists;
 
 
+  public PageResp(Long total, List<T> lists) {
+    this.total = total;
+    this.lists = lists;
+  }
+
+  public PageResp() {
+
+  }
 }

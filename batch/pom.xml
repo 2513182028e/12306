@@ -26,6 +26,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.15.3</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>-->
+<!--            <version>2023.0.1.0</version>-->
+<!--        </dependency>-->
 
         <!--远程调用openfeign-->
         <dependency>

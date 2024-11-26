@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.CacheNamespace;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-@CacheNamespace
+
 public interface TrainCarriageMapper extends  BaseMapper<TrainCarriage> {
 
 }

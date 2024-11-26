@@ -33,15 +33,11 @@ public class DailyTrainStationServiceImpl extends ServiceImpl<DailyTrainStationM
 
     private static final Logger LOG = LoggerFactory.getLogger(DailyTrainStationServiceImpl.class);
 
-
     @Resource
     private DailyTrainStationMapper DailyTrainStationmapper;
 
     @Resource
     private  TrainStationServiceImpl trainStationService;
-
-
-
 
     public void save(DailyTrainStationSaveReq req) {
         DateTime now = DateTime.now();
@@ -79,11 +75,9 @@ public class DailyTrainStationServiceImpl extends ServiceImpl<DailyTrainStationM
     }
 
 
-
     public void delete(Long id) {
         DailyTrainStationmapper.deleteById(id);
     }
-
 
     public void genDaily(Date date, String code) {
 
@@ -108,7 +102,7 @@ public class DailyTrainStationServiceImpl extends ServiceImpl<DailyTrainStationM
             dailyTrainStation.setId(ShowUtil.getSnowflakeNextId());
             dailyTrainStation.setCreateTime(now);
             dailyTrainStation.setUpdateTime(now);
-            dailyTrainStation.setDate(now);
+            dailyTrainStation.setDate(date);
             DailyTrainStationmapper.insert(dailyTrainStation);
         }
         LOG.info("生成日期【{}】车次【{}】的车站信息结束", DateUtil.formatDate(date), code);

@@ -19,7 +19,7 @@ public class DailyTrainTicketSaveReq {
      */
     @JsonFormat(pattern = "yyyy-MM-dd",timezone = "GMT+8")
     @NotNull(message = "【日期】不能为空")
-    private Date date;
+    private Date date = null;
 
     /**
      * 车次编号

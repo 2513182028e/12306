@@ -25,6 +25,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+            <version>2022.0.0.0-RC1</version>
+        </dependency>
+        <dependency>
             <groupId>SpringCloud</groupId>
             <artifactId>comcn</artifactId>
             <version>0.0.1-SNAPSHOT</version>

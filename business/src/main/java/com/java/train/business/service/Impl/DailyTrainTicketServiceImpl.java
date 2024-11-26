@@ -10,11 +10,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.hash.BloomFilter;
 import com.java.train.business.entity.DailyTrain;
+import com.java.train.business.entity.DailyTrainSeat;
 import com.java.train.business.entity.TrainStation;
+import com.java.train.business.enums.CacheEnum;
 import com.java.train.business.enums.SeatTypeEnum;
 import com.java.train.business.enums.TrainTypeEnum;
+import com.java.train.business.resp.DailyTrainQueryResp;
 import com.java.train.business.service.DailyTrainTicketService;
+import com.java.train.common.exception.BusinessException;
+import com.java.train.common.exception.BusinessExceptionEnum;
 import com.java.train.common.resp.PageResp;
 import com.java.train.common.util.ShowUtil;
 import com.java.train.business.entity.DailyTrainTicket;
@@ -23,8 +29,15 @@ import com.java.train.business.req.DailyTrainTicketQueryReq;
 import com.java.train.business.req.DailyTrainTicketSaveReq;
 import com.java.train.business.resp.DailyTrainTicketQueryResp;
 import jakarta.annotation.Resource;
+import org.redisson.Redisson;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +46,8 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 @Service
 public class DailyTrainTicketServiceImpl extends ServiceImpl<DailyTrainTicketMapper,DailyTrainTicket> implements DailyTrainTicketService {
 
@@ -40,6 +55,14 @@ public class DailyTrainTicketServiceImpl extends ServiceImpl<DailyTrainTicketMap
 
     private static final Logger LOG = LoggerFactory.getLogger(DailyTrainTicketServiceImpl.class);
 
+    @Resource
+    private RedisTemplate<String,Object> redisTemplate;
+
+    @Resource
+    private RBloomFilter<String> bloomFilter;
+
+    @Resource
+    private  RedissonClient redissonClient;
 
     @Resource
     private DailyTrainTicketMapper DailyTrainTicketmapper;
@@ -67,28 +90,76 @@ public class DailyTrainTicketServiceImpl extends ServiceImpl<DailyTrainTicketMap
         }
     }
 
-    public PageResp<DailyTrainTicketQueryResp> queryList(DailyTrainTicketQueryReq req) {
-    LambdaQueryWrapper<DailyTrainTicket> lambdaQueryWrapper=new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.orderByDesc(DailyTrainTicket::getId);
+//    public PageResp<DailyTrainTicketQueryResp> queryList0(DailyTrainTicketQueryReq req)
+//    {
+//        String key=req.getDate()+"-"+req.getStart()+"-"+req.getEnd();
+//        if(!bloomFilter.contains(key))
+//        {
+//            throw  new BusinessException(BusinessExceptionEnum.TICKET_NUMS_ERROR);
+//        }//布隆过滤器
+//        //查询缓存
+//        Object o =() redisTemplate.opsForValue().get(key);
+//
+//    }
 
-            LOG.info("查询页码：{}", req.getPage());
-            LOG.info("每页条数：{}", req.getSize());
-            PageHelper.startPage(req.getPage(), req.getSize());
-            List<DailyTrainTicket> selectedList = DailyTrainTicketmapper.selectList(lambdaQueryWrapper);
-            PageInfo<DailyTrainTicket> pageInfo = new PageInfo<>(selectedList);
+//    @CachePut(value = "DailyTrainTicketService.queryList")
+//    public PageResp<DailyTrainTicketQueryResp> queryList2(DailyTrainTicketQueryReq req)
+//    {
+//        return  queryList(req);
+//    }
+
+    //@Cacheable(value = "DailyTrainTicketService.queryList")
+    public PageResp<DailyTrainTicketQueryResp> queryList(DailyTrainTicketQueryReq req) {
+        String key= CacheEnum.Ticket_Nums.getCode()+"-"+req.getDate()+"-"+req.getTrainCode()+"-"+req.getStart()+"-"+req.getEnd();
+        if(!bloomFilter.contains(key))
+        {
+            throw  new BusinessException(BusinessExceptionEnum.TICKET_NUMS_ERROR);
+        }//布隆过滤器
+        List<DailyTrainTicket> list = (List<DailyTrainTicket>) redisTemplate.opsForValue().get(key);
+        if (list!=null)
+        {
+            return new PageResp<>((long) list.size(), BeanUtil.copyToList(list,DailyTrainTicketQueryResp.class));
+        }
+        RLock lock = redissonClient.getLock(key);
+        try {
+            boolean tried = lock.tryLock(0, TimeUnit.SECONDS);
+            if(!tried)
+            {
+                return queryList(req);
+            }
+//                LambdaQueryWrapper<DailyTrainTicket> lambdaQueryWrapper=new LambdaQueryWrapper<>();
+//                lambdaQueryWrapper.orderByDesc(DailyTrainTicket::getId);
+            QueryWrapper<DailyTrainTicket> queryWrapper = new QueryWrapper<>();
+            queryWrapper
+                    .eq("date",req.getDate())
+                    .eq("train_code",req.getTrainCode())
+                     .eq("start",req.getStart())
+                            .eq("end",req.getEnd())
+                                    .orderByDesc("id");
+                LOG.info("查询页码：{}", req.getPage());
+                LOG.info("每页条数：{}", req.getSize());
+                PageHelper.startPage(req.getPage(), req.getSize());
+                List<DailyTrainTicket> selectedList = DailyTrainTicketmapper.selectList(queryWrapper);
+                PageInfo<DailyTrainTicket> pageInfo = new PageInfo<>(selectedList);
                 LOG.info("总行数：{}", pageInfo.getTotal());
                 LOG.info("总页数：{}", pageInfo.getPages());
-
-                List<DailyTrainTicketQueryResp> list = BeanUtil.copyToList(selectedList, DailyTrainTicketQueryResp.class);
-
-                    PageResp<DailyTrainTicketQueryResp> pageResp = new PageResp<>();
-                        pageResp.setTotal(pageInfo.getTotal());
-                        pageResp.setLists(list);
-                        return pageResp;
-
+                //List<DailyTrainTicketQueryResp> list = BeanUtil.copyToList(selectedList, DailyTrainTicketQueryResp.class);
+                PageResp<DailyTrainTicketQueryResp> pageResp = new PageResp<>();
+                pageResp.setTotal(pageInfo.getTotal());
+                pageResp.setLists(BeanUtil.copyToList(selectedList,DailyTrainTicketQueryResp.class));
+                //存入缓存和布隆过滤器
+                redisTemplate.opsForValue().set(key,selectedList);
+                bloomFilter.add(key);
+                return pageResp;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }finally {
+            if(lock!=null&&lock.isHeldByCurrentThread())
+            {
+                lock.unlock();
+            }
+        }
     }
-
-
 
     public void delete(Long id) {
         DailyTrainTicketmapper.deleteById(id);
@@ -128,11 +199,11 @@ public class DailyTrainTicketServiceImpl extends ServiceImpl<DailyTrainTicketMap
                 dailyTrainTicket.setStart(trainStationStart.getName());
                 dailyTrainTicket.setStartPinyin(trainStationStart.getNamePinyin());
                 dailyTrainTicket.setStartTime(trainStationStart.getOutTime());
-                dailyTrainTicket.setStartIndex(trainStationStart.getIndex());
+                dailyTrainTicket.setStartIndex(trainStationStart.getIndexes());
                 dailyTrainTicket.setEnd(trainStationEnd.getName());
                 dailyTrainTicket.setEndPinyin(trainStationEnd.getNamePinyin());
                 dailyTrainTicket.setEndTime(trainStationEnd.getInTime());
-                dailyTrainTicket.setEndIndex(trainStationEnd.getIndex());
+                dailyTrainTicket.setEndIndex(trainStationEnd.getIndexes());
                 int ydz=dailyTrainSeatService.countSeat(date,trainCode, SeatTypeEnum.YDZ.getCode());
                 int edz=dailyTrainSeatService.countSeat(date,trainCode,SeatTypeEnum.EDZ.getCode());
                 int rw=dailyTrainSeatService.countSeat(date,trainCode,SeatTypeEnum.RW.getCode());
@@ -168,6 +239,7 @@ public class DailyTrainTicketServiceImpl extends ServiceImpl<DailyTrainTicketMap
         }
 
     }
+
 
     public DailyTrainTicket  selectByUnique(Date date,String trainCode,String start,String end)
     {

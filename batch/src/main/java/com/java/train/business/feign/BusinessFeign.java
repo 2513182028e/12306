@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Date;
 
-@FeignClient(name = "business",url = "http://127.0.0.1:8004/business")
+@FeignClient(name = "business")
 public interface BusinessFeign {
 
 
-    @GetMapping("hello")
+    @GetMapping("/member/hello")
     public String hello();
 
 
-    @GetMapping("/admin/daily-train/gen-daily/{date}")
+    @GetMapping("/member/admin/daily-train/gen-daily/{date}")
     CommonResp<Object> genDaily(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date date);
 }

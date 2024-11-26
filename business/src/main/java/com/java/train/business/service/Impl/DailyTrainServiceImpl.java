@@ -48,6 +48,9 @@ public class DailyTrainServiceImpl extends ServiceImpl<DailyTrainMapper,DailyTra
     @Resource
     private  DailyTrainSeatServiceImpl dailyTrainSeatService;
 
+    @Resource
+    private DailyTrainTicketServiceImpl dailyTrainTicketService;
+
 
 
 
@@ -112,6 +115,8 @@ public class DailyTrainServiceImpl extends ServiceImpl<DailyTrainMapper,DailyTra
     public void  getDailyTrain(Date date,Train train)
     {
         DateTime now = DateTime.now();
+
+
         //删除该车次已有的数据
         QueryWrapper<DailyTrain> queryWrapper=new QueryWrapper<>();
         queryWrapper.eq("code",train.getCode());
@@ -125,7 +130,7 @@ public class DailyTrainServiceImpl extends ServiceImpl<DailyTrainMapper,DailyTra
         dailyTrain.setCreateTime(now);
         dailyTrain.setDate(date);
         DailyTrainmapper.insert(dailyTrain);
-
+        //LOG.info("dailyTrain的车次:{}",dailyTrain);
         //生成该车次的车站数据
         dailyTrainStationService.genDaily(date,train.getCode());
 
@@ -135,9 +140,8 @@ public class DailyTrainServiceImpl extends ServiceImpl<DailyTrainMapper,DailyTra
         //生成该车次的座位数据
         dailyTrainSeatService.genDaily(date,train.getCode());
 
-
         //生成该车次的余票信息
-
+        dailyTrainTicketService.genDaily(dailyTrain,date,train.getCode());
     }
 
 }

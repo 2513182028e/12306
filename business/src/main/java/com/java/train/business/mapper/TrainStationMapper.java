@@ -6,7 +6,11 @@ import com.java.train.business.entity.TrainStation;
 import org.apache.ibatis.annotations.CacheNamespace;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
-@CacheNamespace
-public interface TrainStationMapper extends BaseMapper<TrainStation> {
+public interface TrainStationMapper extends  BaseMapper<TrainStation> {
+
+
+    List<TrainStation> findByCode(String trainCode);
 }

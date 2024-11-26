@@ -16,7 +16,7 @@ public class DailyTrainStation implements Serializable {
 
     private String trainCode;
 
-    private Integer index;
+    private Integer indexes;
 
     private String name;
 
